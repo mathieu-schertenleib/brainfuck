@@ -2,33 +2,28 @@
 
 #include <iostream>
 
-namespace
-{
-constexpr auto usage = R"(Brainfuck interpreter
-
-Usage:
-    brainfuck <filename> [--memory=<B>]
-    brainfuck [-h | --help]
-
-Options:
-    -h --help       Show this screen
-    --memory=<B>    Set the amount of bytes allocated [default: 30000]
-)";
-} // namespace
-
 auto main(int argc, char *argv[]) -> int
 {
-    Bf_interpreter bfi;
-
-    // TODO: parse command line parameters
+    brainfuck::Interpreter interpreter;
 
     if (argc == 2)
     {
-        bfi.execute(argv[1]);
+        try
+        {
+            brainfuck::Program program(argv[1]);
+            interpreter.execute(program);
+        }
+        catch (const std::exception &e)
+        {
+            std::cerr << e.what();
+        }
     }
     else
     {
-        std::cerr << usage;
+        std::cerr << "Brainfuck interpreter\n"
+                     "\n"
+                     "Usage :\n"
+                     "\tbrainfuck <filename>\n";
     }
 
     return 0;
