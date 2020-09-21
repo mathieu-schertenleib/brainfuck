@@ -1,29 +1,52 @@
 #ifndef BRAINFUCK_HPP
 #define BRAINFUCK_HPP
 
+#include <array>
 #include <cstdint>
 #include <fstream>
 #include <vector>
 
-class Bf_interpreter
+namespace brainfuck
+{
+enum class Instruction : char
+{
+    increment_value,
+    decrement_value,
+    increment_pointer,
+    decrement_pointer,
+    output_value,
+    input_value,
+    loop_start,
+    loop_end
+};
+
+struct Program
+{
+    explicit Program(const char *filename);
+
+    std::vector<Instruction> instructions;
+
+    using Iterator = decltype(instructions)::const_iterator;
+};
+
+class Interpreter
 {
 public:
-    explicit Bf_interpreter(std::size_t memory_size = 30000);
-
-    void execute(const char *filename);
+    void execute(const Program &program);
 
 private:
-    std::vector<std::uint8_t> m_memory;
-    std::vector<std::uint8_t>::iterator m_ptr;
+    std::array<unsigned char, 30000> m_memory {};
+    decltype(m_memory)::iterator m_ptr {m_memory.begin()};
 
-    void decrement_ptr();
-    void increment_ptr();
     void increment_value();
     void decrement_value();
+    void increment_pointer();
+    void decrement_pointer();
     void output_value() const;
     void input_value();
-    void start_loop(std::ifstream &file) const;
-    void end_loop(std::ifstream &file) const;
+    void start_loop(Program::Iterator &it) const;
+    void end_loop(Program::Iterator &it) const;
 };
+} // namespace brainfuck
 
 #endif
