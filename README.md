@@ -1,22 +1,30 @@
 # brainfuck
+
 A Brainfuck interpreter written in C++
 
-## the language
-The Brainfuck machine data consists of an array of bytes and a pointer initially pointing to the leftmost byte of the array.
+## The machine
+
+The memory consists of an array of 30,000 bytes, initially set to zero. A single pointer is the unique way to interract
+with it. It is initialised pointing to the leftmost byte of the array.
+
+## The language
+
 The language uses only eight one-character instructions listed below.
 
-\> :    increment the pointer
+`>` move the pointer right
 
-\< :    decrement the pointer
+`<` move the pointer left
 
-\+ :    increment the value under the pointer
+`+` increment the value at the pointer
 
-\- :    decrement the value under the pointer
+`-` decrement the value at the pointer
 
-\. :    write the value under the pointer to standard output using ASCII format
+`.` write the value at the pointer to standard output using ASCII format
 
-\, :    read from standard input to the value under the pointer
+`,` read from standard input to the value at the pointer
 
-\[ :    if the value under the pointer is null, jump to the corresponding closing bracket
+`[` if the value at the pointer is null, jump to the corresponding closing bracket
 
-\] :    if the value under the pointer is not null, jump to the corresponding opening bracket
+`]` if the value at the pointer is not null, jump to the corresponding opening bracket
+
+Any other character is considered a comment and ignored.

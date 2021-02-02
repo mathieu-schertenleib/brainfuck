@@ -6,9 +6,9 @@
 #include <fstream>
 #include <vector>
 
-namespace brainfuck
+namespace bf
 {
-enum class Instruction : char
+enum struct Token : std::uint8_t
 {
     increment_value,
     decrement_value,
@@ -16,37 +16,31 @@ enum class Instruction : char
     decrement_pointer,
     output_value,
     input_value,
-    loop_start,
-    loop_end
+    begin_loop,
+    end_loop
 };
 
-struct Program
-{
-    explicit Program(const char *filename);
-
-    std::vector<Instruction> instructions;
-
-    using Iterator = decltype(instructions)::const_iterator;
-};
+[[nodiscard]] auto file_to_string(const std::string &filename) -> std::string;
+[[nodiscard]] auto tokenise(const std::string &program) -> std::vector<Token>;
 
 class Interpreter
 {
 public:
-    void execute(const Program &program);
+    void execute(const std::vector<Token> &tokens);
 
 private:
-    std::array<unsigned char, 30000> m_memory {};
-    decltype(m_memory)::iterator m_ptr {m_memory.begin()};
+    std::array<std::uint8_t, 30000> m_memory {};
+    std::uint8_t *m_ptr {m_memory.begin()};
 
-    void increment_value();
-    void decrement_value();
-    void increment_pointer();
-    void decrement_pointer();
+    void increment_value() noexcept;
+    void decrement_value() noexcept;
+    void increment_pointer() noexcept;
+    void decrement_pointer() noexcept;
     void output_value() const;
     void input_value();
-    void start_loop(Program::Iterator &it) const;
-    void end_loop(Program::Iterator &it) const;
+    void start_loop(std::vector<Token>::const_iterator &it) const;
+    void end_loop(std::vector<Token>::const_iterator &it) const;
 };
-} // namespace brainfuck
+} // namespace bf
 
 #endif

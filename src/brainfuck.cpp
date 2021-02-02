@@ -2,84 +2,97 @@
 
 #include <iostream>
 
-namespace brainfuck
+namespace bf
 {
-Program::Program(const char *filename)
+[[nodiscard]] auto file_to_string(const std::string &filename) -> std::string
 {
-    std::ifstream file(filename);
-    if (!file.is_open())
+    std::ifstream is(filename, std::ios::ate);
+
+    if (!is.is_open())
     {
-        throw std::runtime_error("Failed to open file");
+        throw std::runtime_error("Failed to open file \"" + filename + "\"\n");
     }
 
-    char c {};
-    while (file.get(c))
+    std::string str;
+    str.reserve(is.tellg());
+    is.seekg(0);
+
+    str.assign((std::istreambuf_iterator<char>(is)),
+               std::istreambuf_iterator<char>());
+
+    return str;
+}
+
+[[nodiscard]] auto tokenise(const std::string &program) -> std::vector<Token>
+{
+    std::vector<Token> tokens;
+    for (const auto character : program)
     {
-        switch (c)
+        switch (character)
         {
         case '+':
-            instructions.push_back(Instruction::increment_value);
+            tokens.push_back(Token::increment_value);
             break;
         case '-':
-            instructions.push_back(Instruction::decrement_value);
+            tokens.push_back(Token::decrement_value);
             break;
         case '>':
-            instructions.push_back(Instruction::increment_pointer);
+            tokens.push_back(Token::increment_pointer);
             break;
         case '<':
-            instructions.push_back(Instruction::decrement_pointer);
+            tokens.push_back(Token::decrement_pointer);
             break;
         case '.':
-            instructions.push_back(Instruction::output_value);
+            tokens.push_back(Token::output_value);
             break;
         case ',':
-            instructions.push_back(Instruction::input_value);
+            tokens.push_back(Token::input_value);
             break;
         case '[':
-            instructions.push_back(Instruction::loop_start);
+            tokens.push_back(Token::begin_loop);
             break;
         case ']':
-            instructions.push_back(Instruction::loop_end);
+            tokens.push_back(Token::end_loop);
             break;
         default:
             break;
         }
     }
 
-    file.close();
+    return tokens;
 }
 
-void Interpreter::execute(const Program &program)
+void Interpreter::execute(const std::vector<Token> &tokens)
 {
-    Program::Iterator instruction_pointer {program.instructions.cbegin()};
-    Program::Iterator program_end {program.instructions.cend()};
+    const auto program_end {tokens.end()};
 
-    for (; instruction_pointer != program_end; ++instruction_pointer)
+    for (auto instruction_pointer {tokens.begin()};
+         instruction_pointer != program_end; ++instruction_pointer)
     {
         switch (*instruction_pointer)
         {
-        case Instruction::increment_value:
+        case Token::increment_value:
             increment_value();
             break;
-        case Instruction::decrement_value:
+        case Token::decrement_value:
             decrement_value();
             break;
-        case Instruction::increment_pointer:
+        case Token::increment_pointer:
             increment_pointer();
             break;
-        case Instruction::decrement_pointer:
+        case Token::decrement_pointer:
             decrement_pointer();
             break;
-        case Instruction::output_value:
+        case Token::output_value:
             output_value();
             break;
-        case Instruction::input_value:
+        case Token::input_value:
             input_value();
             break;
-        case Instruction::loop_start:
+        case Token::begin_loop:
             start_loop(instruction_pointer);
             break;
-        case Instruction::loop_end:
+        case Token::end_loop:
             end_loop(instruction_pointer);
             break;
         default:
@@ -88,36 +101,22 @@ void Interpreter::execute(const Program &program)
     }
 }
 
-void Interpreter::increment_pointer()
+void Interpreter::increment_pointer() noexcept
 {
-    if (m_ptr < m_memory.end() - 1)
-    {
-        ++m_ptr;
-    }
-    else
-    {
-        throw std::runtime_error("Out of bound pointer");
-    }
+    ++m_ptr;
 }
 
-void Interpreter::decrement_pointer()
+void Interpreter::decrement_pointer() noexcept
 {
-    if (m_ptr > m_memory.begin())
-    {
-        --m_ptr;
-    }
-    else
-    {
-        throw std::runtime_error("Out of bound pointer");
-    }
+    --m_ptr;
 }
 
-void Interpreter::increment_value()
+void Interpreter::increment_value() noexcept
 {
     ++*m_ptr;
 }
 
-void Interpreter::decrement_value()
+void Interpreter::decrement_value() noexcept
 {
     --*m_ptr;
 }
@@ -132,7 +131,7 @@ void Interpreter::input_value()
     std::cin >> *m_ptr;
 }
 
-void Interpreter::start_loop(Program::Iterator &it) const
+void Interpreter::start_loop(std::vector<Token>::const_iterator &it) const
 {
     if (*m_ptr == 0)
     {
@@ -140,27 +139,35 @@ void Interpreter::start_loop(Program::Iterator &it) const
         while (loop_counter > 0)
         {
             ++it;
-            if (*it == Instruction::loop_start)
-                ++loop_counter;
-            else if (*it == Instruction::loop_end)
+            if (*it == Token::end_loop)
+            {
                 --loop_counter;
+            }
+            else if (*it == Token::begin_loop)
+            {
+                ++loop_counter;
+            }
         }
     }
 }
 
-void Interpreter::end_loop(Program::Iterator &it) const
+void Interpreter::end_loop(std::vector<Token>::const_iterator &it) const
 {
-    if (*m_ptr > 0)
+    if (*m_ptr != 0)
     {
         unsigned int loop_counter {1};
         while (loop_counter > 0)
         {
             --it;
-            if (*it == Instruction::loop_end)
-                ++loop_counter;
-            else if (*it == Instruction::loop_start)
+            if (*it == Token::begin_loop)
+            {
                 --loop_counter;
+            }
+            else if (*it == Token::end_loop)
+            {
+                ++loop_counter;
+            }
         }
     }
 }
-} // namespace brainfuck
+} // namespace bf

@@ -4,27 +4,26 @@
 
 auto main(int argc, char *argv[]) -> int
 {
-    brainfuck::Interpreter interpreter;
-
     if (argc == 2)
     {
         try
         {
-            brainfuck::Program program(argv[1]);
-            interpreter.execute(program);
+            bf::Interpreter interpreter;
+            interpreter.execute(bf::tokenise(bf::file_to_string(argv[1])));
         }
         catch (const std::exception &e)
         {
             std::cerr << e.what();
+            return EXIT_FAILURE;
         }
     }
     else
     {
-        std::cerr << "Brainfuck interpreter\n"
+        std::cout << "Brainfuck interpreter\n"
                      "\n"
                      "Usage :\n"
                      "\tbrainfuck <filename>\n";
     }
 
-    return 0;
+    return EXIT_SUCCESS;
 }
